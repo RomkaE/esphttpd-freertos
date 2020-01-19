@@ -3,9 +3,9 @@
 
 #include "driver/gpio.h"
 
-#define LED_WIFI (GPIO_NUM_5)  // Green LED
-#define LED_BLE (GPIO_NUM_15) // Blue LED
-#define LED_CGI (GPIO_NUM_32)  // Red LED
+#define LED_WIFI (GPIO_NUM_1)  // Green LED
+#define LED_BLE (GPIO_NUM_3) // Blue LED
+#define LED_CGI (GPIO_NUM_2)  // Red LED
 
 enum BLE_state_e {
 	BLE_STATE_OFF = 0,  // BLE turned-off
@@ -25,7 +25,7 @@ enum WIFI_state_e {
 };
 void set_status_ind_wifi(enum WIFI_state_e new_state);
 
-#define BTN_GPIO  (GPIO_NUM_34) // Push-button
+#define BTN_GPIO  (GPIO_NUM_0) // Push-button
 
 
 void ioLed(int ledgpio, int en);

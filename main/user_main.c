@@ -39,8 +39,6 @@ the server, including WiFi connection management capabilities, some IO etc.
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
-
-#ifdef ESP32
 #include "freertos/event_groups.h"
 #include "esp_log.h"
 
@@ -73,12 +71,12 @@ char my_hostname[16] = "esphttpd";
 #define DEFAULT_WIFI_MODE WIFI_MODE_AP
 #define DEFAULT_WIFI_STA_SSID CONFIG_EXAMPLE_WIFI_SSID
 #define DEFAULT_WIFI_STA_PASS CONFIG_EXAMPLE_WIFI_PASSWORD
-#endif
+
 
 #define TAG "user_main"
 
 #define LISTEN_PORT     80u
-#define MAX_CONNECTIONS 32u
+#define MAX_CONNECTIONS 4u
 
 static char connectionMemory[sizeof(RtosConnType) * MAX_CONNECTIONS];
 static HttpdFreertosInstance httpdFreertosInstance;
@@ -211,9 +209,6 @@ HttpdBuiltInUrl builtInUrls[] = {
 
 	ROUTE_END()
 };
-
-
-#ifdef ESP32
 
 static void update_status_ind_wifi()
 {
@@ -441,18 +436,9 @@ void init_wifi(bool factory_defaults)
 
 	ESP_ERROR_CHECK( esp_wifi_start() );
 }
-#endif
 
 //Main routine. Initialize stdout, the I/O, filesystem and the webserver and we're done.
-#if ESP32
 void app_main(void) {
-#else
-void user_init(void) {
-#endif
-
-#ifndef ESP32
-	uart_div_modify(0, UART_CLK_FREQ / 115200);
-#endif
 
 	ioInit();
 // FIXME: Re-enable this when capdns is fixed for esp32
@@ -460,8 +446,19 @@ void user_init(void) {
 	esp_err_t err;
 	// Init NVS
 	err = nvs_flash_init();
+	bool f_nvs_erase = false;
+
+#if CONFIG_IDF_TARGET_ESP32 == 1
 	if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
-	{
+		f_nvs_erase = true;
+#elif CONFIG_IDF_TARGET_ESP8266 == 1
+	if (err == ESP_ERR_NVS_NO_FREE_PAGES)
+		f_nvs_erase = true;
+#else
+#error "ESP platform not specified!"
+#endif
+
+	if (f_nvs_erase) {
 		// NVS partition was truncated and needs to be erased
 		// Retry nvs_flash_init
 		ESP_ERROR_CHECK(nvs_flash_erase());
@@ -500,7 +497,7 @@ void user_init(void) {
 		.memAddr = espfs_image_bin,
 	};
 	EspFs* fs = espFsInit(&espfs_conf);
-    httpdRegisterEspfs(fs);
+	httpdRegisterEspfs(fs);
 #endif // CONFIG_ESPHTTPD_USE_ESPFS
 
 	tcpip_adapter_init();

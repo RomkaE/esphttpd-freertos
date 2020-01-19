@@ -242,16 +242,21 @@ void ioInit() {
 	ioLed(LED_WIFI, 0);  // Turn off LED1
 	ioLed(LED_BLE, 0);  // Turn off LED2
 
+#if CONFIG_IDF_TARGET_ESP32 == 1
 	/* Configure the IOMUX register for pad GPIO */
 	gpio_pad_select_gpio(LED_WIFI);
 	gpio_pad_select_gpio(LED_BLE);
 	gpio_pad_select_gpio(LED_CGI);
 	gpio_pad_select_gpio(BTN_GPIO);
+#endif
+
 	/* Set the GPIO as a push/pull output */
-	gpio_set_direction(LED_WIFI, GPIO_MODE_INPUT_OUTPUT);
-	gpio_set_direction(LED_BLE, GPIO_MODE_INPUT_OUTPUT);
-	gpio_set_direction(LED_CGI, GPIO_MODE_INPUT_OUTPUT);
+	gpio_set_direction(LED_WIFI, GPIO_MODE_OUTPUT);
+	gpio_set_direction(LED_BLE, GPIO_MODE_OUTPUT);
+	gpio_set_direction(LED_CGI, GPIO_MODE_OUTPUT);
+
 	gpio_set_direction(BTN_GPIO, GPIO_MODE_INPUT);
+	gpio_set_pull_mode(BTN_GPIO, GPIO_PULLUP_ONLY);
 
 	blink_stateMachine(SM_INIT, 0,0,0);  // Init blink_stateMachine
 
